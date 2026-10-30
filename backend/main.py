@@ -21,24 +21,24 @@ app.add_middleware(
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 if not GROQ_API_KEY:
-    print("⚠️  ATTENTION: GROQ_API_KEY non trouvée dans .env")
+    print("ATTENTION: GROQ_API_KEY non trouvée dans .env")
     print("   Créez un fichier .env avec: GROQ_API_KEY=votre_cle")
     groq_client = None
 else:
     try:
         groq_client = Groq(api_key=GROQ_API_KEY)
-        print("✅ Groq API initialisée")
+        print("Groq API initialisée")
     except Exception as e:
-        print(f"❌ Erreur Groq: {e}")
+        print(f"Erreur Groq: {e}")
         groq_client = None
 
 chroma_client = chromadb.PersistentClient(path="./chroma_db")
 
 try:
     collection = chroma_client.get_collection("boutique_vetements")
-    print(f"✅ Collection chargée avec {collection.count()} produits")
+    print(f"Collection chargée avec {collection.count()} produits")
 except Exception as e:
-    print(f"❌ Erreur Collection: {e}")
+    print(f"Erreur Collection: {e}")
     print("   Exécutez: python setup.py")
     collection = None
 
@@ -57,8 +57,8 @@ class Product(BaseModel):
 @app.get("/")
 def read_root():
     status = {
-        "status": "Backend actif ✅",
-        "ia": "Groq API (llama-3.3-70b)" if groq_client else "❌ Groq non configurée",
+        "status": "Backend actif ",
+        "ia": "Groq API (llama-3.3-70b)" if groq_client else "Groq non configurée",
         "database": f"{collection.count()} produits" if collection else "❌ Non initialisée"
     }
     return status
@@ -89,7 +89,7 @@ Stock: {product.stock} unités
             }],
             ids=[f"product_{product.nom.replace(' ', '_')}"]
         )
-        return {"message": f"✅ Produit '{product.nom}' ajouté avec succès"}
+        return {"message": f" Produit '{product.nom}' ajouté avec succès"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur: {str(e)}")
 
@@ -97,10 +97,10 @@ Stock: {product.stock} unités
 def chat(message: Message):
     
     if not collection:
-        return {"response": "❌ Base de données non initialisée. Exécutez setup.py"}
+        return {"response": "Base de données non initialisée. Exécutez setup.py"}
     
     if not groq_client:
-        return {"response": "❌ Groq API non configurée. Vérifiez votre fichier .env avec GROQ_API_KEY"}
+        return {"response": "Groq API non configurée. Vérifiez votre fichier .env avec GROQ_API_KEY"}
     
     user_message = message.message
     
@@ -168,14 +168,14 @@ Réponds de manière amicale, professionnelle et en français. Sois concis mais 
     
     except Exception as e:
         error_msg = str(e)
-        print(f"❌ Erreur Groq API: {error_msg}")
+        print(f"Erreur Groq API: {error_msg}")
         
         if "api_key" in error_msg.lower():
-            return {"response": "❌ Clé API Groq invalide. Vérifiez votre fichier .env"}
+            return {"response": "Clé API Groq invalide. Vérifiez votre fichier .env"}
         elif "rate_limit" in error_msg.lower():
-            return {"response": "⏳ Trop de requêtes. Veuillez patienter quelques secondes."}
+            return {"response": "Trop de requêtes. Veuillez patienter quelques secondes."}
         else:
-            return {"response": f"❌ Erreur avec le service d'IA. Contactez +216 XX XXX XXX. (Détails: {error_msg})"}
+            return {"response": f"Erreur avec le service d'IA. Contactez +216 XX XXX XXX. (Détails: {error_msg})"}
 
 @app.get("/products")
 def list_products():
