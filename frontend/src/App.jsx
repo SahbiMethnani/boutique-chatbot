@@ -272,7 +272,7 @@ function App() {
         </div>
       )}
 
-      {/* Input Area */}
+      {}
       <div className="bg-black p-6 shadow-2xl border-t-4 border-white">
         <div className="max-w-4xl mx-auto">
           <div className="flex gap-3">
