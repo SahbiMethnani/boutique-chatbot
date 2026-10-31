@@ -21,8 +21,8 @@ app.add_middleware(
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 if not GROQ_API_KEY:
-    print("ATTENTION: GROQ_API_KEY non trouvée dans .env")
-    print("   Créez un fichier .env avec: GROQ_API_KEY=votre_cle")
+    print("GROQ_API_KEY non trouvée")
+    print("   Créez un fichier et mettre la clef la-bas")
     groq_client = None
 else:
     try:
