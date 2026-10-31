@@ -144,14 +144,17 @@ Réponds de manière amicale, professionnelle et en français. Sois concis mais 
     
     except Exception as e:
         error_msg = str(e)
-        print(f"Erreur Groq API: {error_msg}")
+        #print(f"Erreur Groq API: {error_msg}")
+        print(f"Erreur Groq API")
+
+        
         
         if "api_key" in error_msg.lower():
             return {"response": "Clé API Groq invalide. Vérifiez votre fichier .env"}
         elif "rate_limit" in error_msg.lower():
             return {"response": "Trop de requêtes. Veuillez patienter quelques secondes."}
         else:
-            return {"response": f"Erreur avec le service d'IA. Contactez +216 XX XXX XXX. (Détails: {error_msg})"}
+            return {"response": f"Erreur avec le service d'IA. Contactez +216 XX XXX XXX. "}#(Détails: {error_msg})}
 
 @router.get("/products")
 def list_products():

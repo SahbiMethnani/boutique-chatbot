@@ -2,12 +2,13 @@ import json
 import os
 import re
 from types import SimpleNamespace
-os.environ["GROQ_API_KEY"] = "test_clef"
+os.environ["GROQ_API_KEY"] = "test"
+
 import chromadb
 import pytest
 import pytest_html
 from fastapi.testclient import TestClient
-from .. import main
+
 def construire_document(nom, categorie, description, prix, tailles, couleurs, stock):
     return f"""
 Produit: {nom}
@@ -116,15 +117,13 @@ class FakeGroq:
     @property
     def prompt(self):
         return self.calls[-1]["messages"][1]["content"]
-
 _vrai_persistent_client = chromadb.PersistentClient
 chromadb.PersistentClient = lambda *args, **kwargs: FakeChromaClient()
 try:
-    from .. import main
+    import api
+    import main
 finally:
     chromadb.PersistentClient = _vrai_persistent_client
-
-
 @pytest.fixture
 def client():
     return TestClient(main.app)
@@ -133,28 +132,28 @@ def client():
 @pytest.fixture
 def collection(monkeypatch):
     fausse = FakeCollection(PRODUITS_INITIAUX)
-    monkeypatch.setattr(main, "collection", fausse)
+    monkeypatch.setattr(api, "collection", fausse)
     return fausse
 
 
 @pytest.fixture
 def collection_vide(monkeypatch):
     fausse = FakeCollection()
-    monkeypatch.setattr(main, "collection", fausse)
+    monkeypatch.setattr(api, "collection", fausse)
     return fausse
 
 
 @pytest.fixture
 def groq(monkeypatch):
     faux = FakeGroq()
-    monkeypatch.setattr(main, "groq_client", faux)
+    monkeypatch.setattr(api, "groq_client", faux)
     return faux
 
 
 @pytest.fixture
 def chroma(monkeypatch):
     faux = FakeChromaClient()
-    monkeypatch.setattr(main, "chroma_client", faux)
+    monkeypatch.setattr(api, "chroma_client", faux)
     return faux
 
 
@@ -201,8 +200,10 @@ def capture(extras):
 
     return _capture
 
+
+
 def pytest_html_report_title(report):
-    report.title = "Rapport de tests - Boutique Chatbot (FastAPI + ChromaDB + Groq)"
+    report.title = "Rapport de tests  Boutique Chatbot"
 
 
 def pytest_html_results_table_header(cells):
