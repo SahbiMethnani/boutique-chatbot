@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, ShoppingBag, Loader2, Package, Truck, CreditCard, Phone, AlertCircle } from 'lucide-react';
-import './index.css'   // 🔥 indispensable pour activer Tailwind
+import './index.css'   
 
 const API_URL = 'http://localhost:8000';
 
@@ -9,16 +9,15 @@ function App() {
     {
       id: 1,
       type: 'bot',
-      text: "Marhba bik ! 👋\n\nBienvenue dans notre boutique de vêtements en Tunisie. Je suis là pour vous aider avec :\n\n• Nos collections et produits\n• Les tailles et disponibilités\n• La livraison en Tunisie\n• Les paiements et retours\n\nComment puis-je vous aider ?",
+      text: "Marhba bik ! \n\nMarhbe Bik fel mhal. ena lahne bech N3awnek :\n\n• Nos collections et produits\n• Les tailles et disponibilités\n• La livraison en Tunisie\n• Les paiements et retours\n\nComment puis-je vous aider ?",
       timestamp: new Date()
     }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [apiStatus, setApiStatus] = useState('checking'); // checking, online, offline
+  const [apiStatus, setApiStatus] = useState('checking'); 
   const messagesEndRef = useRef(null);
 
-  // Vérifier le statut de l'API au démarrage
   useEffect(() => {
     checkAPIStatus();
   }, []);
@@ -64,7 +63,6 @@ function App() {
     setIsTyping(true);
 
     try {
-      // Appel à l'API Backend
       const response = await fetch(`${API_URL}/chat`, {
         method: 'POST',
         headers: {
@@ -127,7 +125,7 @@ function App() {
 
   return (
     <div className="flex flex-col h-screen bg-white">
-      {/* Header Noir et Blanc */}
+      {}
       <div className="bg-black text-white shadow-2xl p-6 border-b-4 border-white">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-between">
@@ -149,7 +147,7 @@ function App() {
                 <CreditCard size={18} />
                 <span>Paiement sécurisé</span>
               </div>
-              {/* Indicateur de statut API */}
+              {}
               <div className="flex items-center gap-2">
                 <div className={`w-2 h-2 rounded-full ${
                   apiStatus === 'online' ? 'bg-green-500' : 
@@ -167,7 +165,7 @@ function App() {
         </div>
       </div>
 
-      {/* Alerte si backend offline */}
+      {}
       {apiStatus === 'offline' && (
         <div className="bg-red-100 border-l-4 border-red-500 p-4">
           <div className="max-w-6xl mx-auto flex items-center gap-3">
@@ -188,7 +186,7 @@ function App() {
         </div>
       )}
 
-      {/* Messages Container */}
+      {}
       <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
         <div className="max-w-4xl mx-auto space-y-6">
           {messages.map((message) => (
@@ -249,7 +247,7 @@ function App() {
         </div>
       </div>
 
-      {/* Quick Questions */}
+      {}
       {messages.length <= 1 && (
         <div className="px-6 pb-6 bg-gray-50">
           <div className="max-w-4xl mx-auto">
