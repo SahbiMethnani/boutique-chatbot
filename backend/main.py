@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel,Field
 import chromadb
 from typing import List
 import os
@@ -39,20 +39,19 @@ try:
     print(f"Collection chargée avec {collection.count()} produits")
 except Exception as e:
     print(f"Erreur Collection: {e}")
-    print("   Exécutez: python setup.py")
     collection = None
 
 class Message(BaseModel):
     message: str
 
 class Product(BaseModel):
-    nom: str
+    nom: str = Field(min_length=1)
     description: str
-    prix: float
+    prix: float = Field(ge=0)
     categorie: str
     tailles: List[str]
     couleurs: List[str]
-    stock: int
+    stock: int = Field(ge=0)
 
 @app.get("/")
 def read_root():
@@ -67,7 +66,12 @@ def read_root():
 def add_product(product: Product):
     if not collection:
         raise HTTPException(status_code=500, detail="Base de données non initialisée")
-    
+
+    if product.prix < 0:
+        raise HTTPException(status_code=422, detail="Le prix ne peut pas être négatif")
+    if product.stock < 0:
+        raise HTTPException(status_code=422, detail="Le stock ne peut pas être négatif")
+
     document = f"""
 Produit: {product.nom}
 Catégorie: {product.categorie}
@@ -77,7 +81,7 @@ Tailles disponibles: {', '.join(product.tailles)}
 Couleurs disponibles: {', '.join(product.couleurs)}
 Stock: {product.stock} unités
     """.strip()
-    
+
     try:
         collection.add(
             documents=[document],
