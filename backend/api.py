@@ -1,7 +1,7 @@
 import chromadb
 from fastapi import APIRouter, HTTPException
 from groq import Groq
-from config import GROQ_API_KEY
+from config import GROQ_API_KEY,MODEL_NAME
 from model import Product, Message
 router = APIRouter()
 if not GROQ_API_KEY:
@@ -133,7 +133,7 @@ Réponds de manière amicale, professionnelle et en français. Sois concis mais 
                     "content": user_prompt
                 }
             ],
-            model="openai/gpt-oss-safeguard-20b",  
+            model=MODEL_NAME,
             temperature=0.7,
             max_tokens=500,
             top_p=1
