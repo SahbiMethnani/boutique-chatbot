@@ -1,10 +1,30 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, ShoppingBag, Loader2, Package, Truck, CreditCard, Phone, AlertCircle } from 'lucide-react';
-import './index.css'   
+import {
+  Send,
+  Bot,
+  User,
+  ShoppingBag,
+  Loader2,
+  Package,
+  Truck,
+  CreditCard,
+  Phone,
+  AlertCircle,
+  ShieldCheck,
+} from 'lucide-react';
+import './index.css';
+import Admin from './Admin.jsx';
 
 const API_URL = 'http://localhost:8000';
 
 function App() {
+  if (window.location.pathname === '/admin') {
+    return <Admin />;
+  }
+  return <ChatApp />;
+}
+
+function ChatApp() {
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -138,27 +158,35 @@ function App() {
                 <p className="text-sm text-gray-300 mt-1">Mode & Élégance • Livraison en Tunisie</p>
               </div>
             </div>
-            <div className="hidden md:flex items-center gap-6 text-sm">
-              <div className="flex items-center gap-2">
-                <Truck size={18} />
-                <span>Livraison rapide</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CreditCard size={18} />
-                <span>Paiement sécurisé</span>
-              </div>
-              {}
-              <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${
-                  apiStatus === 'online' ? 'bg-green-500' : 
-                  apiStatus === 'offline' ? 'bg-red-500' : 
-                  'bg-yellow-500 animate-pulse'
-                }`}></div>
-                <span className="text-xs">
-                  {apiStatus === 'online' ? 'IA Active' : 
-                   apiStatus === 'offline' ? 'Hors ligne' : 
-                   'Connexion...'}
-                </span>
+            <div className="flex items-center gap-4 md:gap-6 text-sm">
+              <a
+                href="/admin"
+                className="flex items-center gap-2 rounded-lg border border-white/40 px-3 py-2 hover:bg-white hover:text-black transition-colors"
+              >
+                <ShieldCheck size={18} />
+                <span>Administration</span>
+              </a>
+              <div className="hidden md:flex items-center gap-6">
+                <div className="flex items-center gap-2">
+                  <Truck size={18} />
+                  <span>Livraison rapide</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CreditCard size={18} />
+                  <span>Paiement sécurisé</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className={`w-2 h-2 rounded-full ${
+                    apiStatus === 'online' ? 'bg-green-500' :
+                    apiStatus === 'offline' ? 'bg-red-500' :
+                    'bg-yellow-500 animate-pulse'
+                  }`}></div>
+                  <span className="text-xs">
+                    {apiStatus === 'online' ? 'IA Active' :
+                     apiStatus === 'offline' ? 'Hors ligne' :
+                     'Connexion...'}
+                  </span>
+                </div>
               </div>
             </div>
           </div>

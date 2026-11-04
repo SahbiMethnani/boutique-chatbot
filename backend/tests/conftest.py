@@ -3,8 +3,10 @@ import os
 import re
 from types import SimpleNamespace
 os.environ["GROQ_API_KEY"] = "test"
+os.environ["PINECONE_API_KEY"] = ""
+os.environ["PINECONE_INDEX_NAME"] = ""
+os.environ["ADMIN_API_KEY"] = "test-admin-key"
 
-import chromadb
 import pytest
 import pytest_html
 from fastapi.testclient import TestClient
@@ -42,6 +44,7 @@ class FakeCollection:
     def __init__(self, produits=()):
         self.ids, self.documents, self.metadatas = [], [], []
         self.query_calls = []
+        self.add_batch_sizes = []
         self.add_error = self.query_error = self.get_error = None
         for nom, categorie, prix, stock, description in produits:
             self.ids.append(f"product_{nom.replace(' ', '_')}")
@@ -56,6 +59,7 @@ class FakeCollection:
     def add(self, documents, metadatas, ids):
         if self.add_error:
             raise self.add_error
+        self.add_batch_sizes.append(len(ids))
         self.documents.extend(documents)
         self.metadatas.extend(metadatas)
         self.ids.extend(ids)
@@ -81,24 +85,6 @@ class FakeCollection:
         return {"ids": list(self.ids), "metadatas": list(self.metadatas), "documents": list(self.documents)}
 
 
-class FakeChromaClient:
-    def __init__(self):
-        self.deleted, self.created = [], []
-        self.delete_error = None
-
-    def get_collection(self, name):
-        return FakeCollection(PRODUITS_INITIAUX)
-
-    def delete_collection(self, name):
-        if self.delete_error:
-            raise self.delete_error
-        self.deleted.append(name)
-
-    def create_collection(self, name):
-        self.created.append(name)
-        return FakeCollection()
-
-
 class FakeGroq:
 
     def __init__(self, reply="Bonjour ! Voici ma réponse simulée."):
@@ -117,13 +103,21 @@ class FakeGroq:
     @property
     def prompt(self):
         return self.calls[-1]["messages"][1]["content"]
-_vrai_persistent_client = chromadb.PersistentClient
-chromadb.PersistentClient = lambda *args, **kwargs: FakeChromaClient()
-try:
-    import api
-    import main
-finally:
-    chromadb.PersistentClient = _vrai_persistent_client
+import api
+import main
+
+
+@pytest.fixture
+def admin_import_route(monkeypatch, collection):
+    endpoint = next(
+        route.endpoint
+        for route in main.app.routes
+        if getattr(route, "path", None) == "/admin/import-products-csv"
+    )
+    monkeypatch.setitem(endpoint.__globals__, "collection", collection)
+    return endpoint
+
+
 @pytest.fixture
 def client():
     return TestClient(main.app)
@@ -147,13 +141,6 @@ def collection_vide(monkeypatch):
 def groq(monkeypatch):
     faux = FakeGroq()
     monkeypatch.setattr(api, "groq_client", faux)
-    return faux
-
-
-@pytest.fixture
-def chroma(monkeypatch):
-    faux = FakeChromaClient()
-    monkeypatch.setattr(api, "chroma_client", faux)
     return faux
 
 

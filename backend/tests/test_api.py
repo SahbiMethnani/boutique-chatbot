@@ -1,7 +1,6 @@
 
 import pytest
 
-from .. import api
 from ..config import ALLOWED_ORIGINS
 class TestRoot:
     def test_backend_actif(self, client, collection, groq, capture):
@@ -46,10 +45,10 @@ class TestAddProduct:
         assert "Tailles disponibles: Unique" in doc
         assert "Couleurs disponibles: Bleu, Noir" in doc
         assert "Stock: 40 unités" in doc
-    def test_erreur_chromadb(self, client, collection, produit_valide, capture):
+    def test_erreur_stockage_vectoriel(self, client, collection, produit_valide, capture):
         collection.add_error = RuntimeError("disque plein")
         r = client.post("/add-product", json=produit_valide)
-        capture("Ajout avec erreur ChromaDB", r)
+        capture("Ajout avec erreur de stockage vectoriel", r)
         assert r.status_code == 500
         assert "disque plein" in r.json()["detail"]
 
@@ -116,7 +115,7 @@ class TestAddProduct:
         capture("Appel ChromaDB", appel=collection.query_calls[0])
         assert collection.query_calls[0] == (["bonjour tout le monde"], 3)
 
-    def test_erreur_recherche_chromadb(self, client, collection, groq, capsys, capture):
+    def test_erreur_recherche_vectorielle(self, client, collection, groq, capsys, capture):
         collection.query_error = RuntimeError("index corrompu")
         r = client.post("/chat", json={"message": "Bonjour"})
         capture("Chat avec erreur de recherche", r)
@@ -167,6 +166,122 @@ class TestAddProduct:
         capture(f"Corps invalide : {corps}", r)
         assert r.status_code == 422
         assert groq.calls == []
+
+
+class TestCsvProductImport:
+    def test_import_csv_utf8_bom_and_semicolon(
+        self, client, collection, admin_import_route, monkeypatch
+    ):
+        monkeypatch.setitem(admin_import_route.__globals__, "ADMIN_API_KEY", "admin-test-key")
+        csv_content = (
+            "\ufeffnom;description;prix;categorie;tailles;couleurs;stock\r\n"
+            "Robe d'été;Robe légère;89,9;Robes;S|M|L;Blanc|Rose;12\r\n"
+        )
+        response = client.post(
+            "/admin/import-products-csv",
+            files={"file": ("produits.csv", csv_content.encode("utf-8"), "text/csv")},
+            headers={"X-Admin-Key": "admin-test-key"},
+        )
+
+        assert response.status_code == 200, response.json()
+        assert response.json()["imported"] == 1
+        assert collection.count() == 9
+        assert collection.metadatas[-1] == {
+            "nom": "Robe d'été",
+            "prix": 89.9,
+            "categorie": "Robes",
+            "stock": 12,
+        }
+        assert "Tailles disponibles: S, M, L" in collection.documents[-1]
+
+    def test_import_100_products_respects_pinecone_limit(
+        self, client, collection, admin_import_route, monkeypatch
+    ):
+        monkeypatch.setitem(admin_import_route.__globals__, "ADMIN_API_KEY", "admin-test-key")
+        rows = [
+            "nom,description,prix,categorie,tailles,couleurs,stock"
+        ]
+        rows.extend(
+            f"Produit {number},Description,10,Accessoires,U,Noir,1"
+            for number in range(100)
+        )
+        response = client.post(
+            "/admin/import-products-csv",
+            files={
+                "file": (
+                    "produits.csv",
+                    "\n".join(rows),
+                    "text/csv",
+                )
+            },
+            headers={"X-Admin-Key": "admin-test-key"},
+        )
+
+        assert response.status_code == 200
+        assert response.json()["imported"] == 100
+        assert collection.add_batch_sizes == [90, 10]
+        assert collection.count() == 108
+
+    def test_csv_validation_is_atomic(
+        self, client, collection, admin_import_route, monkeypatch
+    ):
+        monkeypatch.setitem(admin_import_route.__globals__, "ADMIN_API_KEY", "admin-test-key")
+        csv_content = (
+            "nom,description,prix,categorie,tailles,couleurs,stock\n"
+            "Produit valide,Description,10,Accessoires,U,Noir,1\n"
+            "Produit invalide,Description,prix-invalide,Accessoires,U,Noir,1\n"
+        )
+        response = client.post(
+            "/admin/import-products-csv",
+            files={"file": ("produits.csv", csv_content, "text/csv")},
+            headers={"X-Admin-Key": "admin-test-key"},
+        )
+
+        assert response.status_code == 422
+        assert response.json()["detail"]["errors"][0]["row"] == 3
+        assert collection.count() == 8
+
+    def test_csv_import_requires_admin_key(
+        self, client, collection, admin_import_route, monkeypatch
+    ):
+        monkeypatch.setitem(admin_import_route.__globals__, "ADMIN_API_KEY", "admin-test-key")
+        csv_content = (
+            "nom,description,prix,categorie,tailles,couleurs,stock\n"
+            "Produit,Description,10,Accessoires,U,Noir,1\n"
+        )
+        response = client.post(
+            "/admin/import-products-csv",
+            files={"file": ("produits.csv", csv_content, "text/csv")},
+            headers={"X-Admin-Key": "wrong-key"},
+        )
+
+        assert response.status_code == 401
+        assert collection.count() == 8
+
+    def test_csv_import_disabled_without_configured_key(
+        self, client, admin_import_route, monkeypatch
+    ):
+        monkeypatch.setitem(admin_import_route.__globals__, "ADMIN_API_KEY", None)
+        response = client.post(
+            "/admin/import-products-csv",
+            files={"file": ("produits.csv", "nom\n", "text/csv")},
+        )
+
+        assert response.status_code == 503
+
+    def test_csv_import_rejects_missing_columns(
+        self, client, collection, admin_import_route, monkeypatch
+    ):
+        monkeypatch.setitem(admin_import_route.__globals__, "ADMIN_API_KEY", "admin-test-key")
+        response = client.post(
+            "/admin/import-products-csv",
+            files={"file": ("produits.csv", "nom,description\nRobe,Legere\n", "text/csv")},
+            headers={"X-Admin-Key": "admin-test-key"},
+        )
+
+        assert response.status_code == 422
+        assert "Colonnes manquantes" in response.json()["detail"]
+        assert collection.count() == 8
 
 
 class TestProducts:

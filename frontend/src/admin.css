@@ -1,0 +1,290 @@
+.admin-page {
+  min-height: 100vh;
+  padding: 32px 20px 56px;
+  color: #17201c;
+  background:
+    radial-gradient(ellipse at top left, rgba(214, 230, 219, 0.6), transparent 38%),
+    #f5f7f5;
+}
+
+.admin-header,
+.admin-card {
+  width: min(100%, 820px);
+  margin: 0 auto;
+}
+
+.admin-header {
+  margin-bottom: 28px;
+}
+
+.admin-back,
+.admin-brand,
+.admin-card-title,
+.admin-help,
+.admin-template-button,
+.admin-result,
+.admin-submit {
+  display: flex;
+  align-items: center;
+}
+
+.admin-back {
+  width: fit-content;
+  gap: 8px;
+  margin-bottom: 28px;
+  color: #42534a;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.admin-back:hover,
+.admin-template-button:hover {
+  color: #087443;
+}
+
+.admin-brand {
+  gap: 14px;
+}
+
+.admin-brand-icon,
+.admin-section-icon {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  color: #fff;
+  background: #123d2b;
+}
+
+.admin-brand-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+}
+
+.admin-eyebrow {
+  margin: 0 0 3px;
+  color: #668070;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.admin-brand h1,
+.admin-card h2 {
+  margin: 0;
+  color: #17201c;
+}
+
+.admin-brand h1 {
+  font-size: clamp(24px, 5vw, 32px);
+}
+
+.admin-card {
+  padding: clamp(22px, 5vw, 40px);
+  border: 1px solid #e1e9e3;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 20px 55px rgba(27, 55, 39, 0.08);
+}
+
+.admin-card-title {
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.admin-section-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+}
+
+.admin-card h2 {
+  font-size: 20px;
+}
+
+.admin-card-title p,
+.admin-help p,
+.admin-note,
+.admin-privacy {
+  color: #68766d;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.admin-card-title p {
+  margin: 5px 0 0;
+}
+
+.admin-help {
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 27px;
+  padding: 18px;
+  border: 1px solid #dcebe1;
+  border-radius: 16px;
+  color: #197448;
+  background: #f5faf6;
+}
+
+.admin-help strong {
+  color: #203d2d;
+  font-size: 14px;
+}
+
+.admin-help p {
+  margin: 7px 0 12px;
+}
+
+.admin-help code {
+  padding: 2px 6px;
+  border-radius: 5px;
+  color: #214e36;
+  background: #e7f1e9;
+}
+
+.admin-template-button {
+  gap: 7px;
+  padding: 0;
+  border: 0;
+  color: #17653d;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.admin-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-label {
+  margin: 0 0 8px;
+  color: #28392e;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.admin-input,
+.admin-file-input {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 1px solid #d8e1da;
+  border-radius: 11px;
+  color: #202c24;
+  background: #fff;
+  font: inherit;
+}
+
+.admin-input:focus,
+.admin-file-input:focus {
+  border-color: #31835a;
+  outline: 3px solid rgba(49, 131, 90, 0.13);
+}
+
+.admin-privacy {
+  margin: 7px 0 22px;
+  font-size: 12px;
+}
+
+.admin-file-input {
+  padding: 8px;
+  background: #fafcfb;
+}
+
+.admin-file-input::file-selector-button {
+  margin-right: 12px;
+  padding: 9px 12px;
+  border: 0;
+  border-radius: 8px;
+  color: #244932;
+  background: #e9f2eb;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.admin-file-name {
+  margin: 8px 0 0;
+  color: #53655a;
+  font-size: 13px;
+}
+
+.admin-result {
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 20px;
+  padding: 14px;
+  border-radius: 12px;
+}
+
+.admin-result.success {
+  color: #17663d;
+  background: #eef8f0;
+}
+
+.admin-result.error {
+  color: #a42e2e;
+  background: #fff1f0;
+}
+
+.admin-result pre {
+  overflow: auto;
+  margin: 0;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.admin-submit {
+  justify-content: center;
+  gap: 9px;
+  min-height: 50px;
+  margin-top: 22px;
+  border: 0;
+  border-radius: 12px;
+  color: #fff;
+  background: #123d2b;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 150ms ease, transform 150ms ease;
+}
+
+.admin-submit:not(:disabled):hover {
+  transform: translateY(-1px);
+  background: #1c5a3d;
+}
+
+.admin-submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.admin-spinner {
+  animation: admin-spin 1s linear infinite;
+}
+
+.admin-note {
+  margin: 18px 0 0;
+  font-size: 12px;
+}
+
+@keyframes admin-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 520px) {
+  .admin-page {
+    padding: 22px 14px 36px;
+  }
+
+  .admin-help {
+    padding: 14px;
+  }
+}

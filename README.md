@@ -2,7 +2,7 @@
 
 **Boutique Chatbot** est une application intelligente permettant aux clients d'interagir avec un chatbot pour obtenir rapidement des informations sur les produits d'une boutique, notamment les prix, les disponibilités, les caractéristiques et les descriptions des articles.
 
-L'application repose sur une architecture **RAG (Retrieval-Augmented Generation)**, qui combine la recherche sémantique dans une base de données vectorielle **ChromaDB** avec un modèle de langage afin de générer des réponses pertinentes et contextualisées.
+L'application repose sur une architecture **RAG (Retrieval-Augmented Generation)**, qui combine la recherche sémantique dans une base de données vectorielle **Pinecone** avec un modèle de langage afin de générer des réponses pertinentes et contextualisées.
 
 Le backend est développé avec **FastAPI**, qui expose les API REST nécessaires à la communication avec le frontend, tandis que l'interface utilisateur est conçue avec **React** pour offrir une expérience moderne, intuitive et responsive.
 
@@ -10,7 +10,7 @@ Le backend est développé avec **FastAPI**, qui expose les API REST nécessaire
 
 - Chatbot intelligent permettant aux clients de poser des questions en langage naturel.
 - Consultation des prix, des disponibilités et des caractéristiques des produits.
-- Recherche sémantique des informations à l'aide de ChromaDB.
+- Recherche sémantique des informations à l'aide de Pinecone.
 - Architecture RAG pour améliorer la pertinence des réponses générées.
 - API REST développées avec FastAPI.
 - Interface utilisateur moderne, responsive et intuitive avec React.
@@ -48,9 +48,9 @@ Le projet repose sur une architecture frontend/backend intégrant un pipeline RA
                        |
                        v
             +----------------------+
-            |       ChromaDB       |
-            |  Base de données      |
-            |     vectorielle      |
+            |       Pinecone       |
+            |  Base de données     |
+            | vectorielle en ligne |
             +----------------------+
                        |
                        v
@@ -67,7 +67,7 @@ Le projet repose sur une architecture frontend/backend intégrant un pipeline RA
 | Python | Développement du backend et du pipeline RAG |
 | FastAPI | Exposition des API REST |
 | React | Développement de l'interface utilisateur |
-| ChromaDB | Stockage et recherche vectorielle |
+| Pinecone | Stockage et recherche vectorielle en ligne |
 | Modèle d'embeddings | Transformation des données en vecteurs |
 | Modèle de langage (LLM) | Génération des réponses en langage naturel |
 
@@ -75,8 +75,8 @@ Le projet repose sur une architecture frontend/backend intégrant un pipeline RA
 
 1. Le client saisit une question dans l'interface React.
 2. Le frontend transmet la question au backend via une API REST.
-3. Le pipeline RAG prépare la question pour la recherche sémantique.
-4. ChromaDB recherche les informations les plus pertinentes dans les données indexées.
+3. Le pipeline RAG transforme la question en vecteur avec le même modèle d'embeddings que Chroma.
+4. Pinecone recherche les informations les plus pertinentes dans les données indexées.
 5. Les résultats récupérés sont transmis au modèle de langage comme contexte.
 6. Le modèle génère une réponse fondée sur les informations disponibles.
 7. Le backend renvoie la réponse au frontend, qui l'affiche au client.
@@ -106,7 +106,7 @@ Cette structure est indicative et peut être adaptée à l'organisation réelle 
 
 - Python et pip.
 - Node.js et npm.
-- Un environnement compatible avec les dépendances de ChromaDB.
+- Un compte Pinecone et un index de dimension 384.
 - Un modèle de langage accessible via une API ou exécuté localement.
 
 ### 1. Cloner le projet
@@ -148,9 +148,36 @@ Installer les dépendances :
 pip install -r requirements.txt
 ```
 
-Configurer les variables d'environnement nécessaires, puis démarrer le serveur :
+Depuis le dossier `backend`, créer ou compléter `.env` avec les paramètres Pinecone
 
-```bash
+`ADMIN_API_KEY` protège l'import CSV. Choisissez une clé longue et gardez-la secrète; vous la saisirez sur l'écran d'administration.
+
+Pour en générer une dans PowerShell, exécutez `python -c "import secrets; print(secrets.token_urlsafe(32))"` depuis le dossier `backend`, copiez le résultat dans `ADMIN_API_KEY`, puis redémarrez le backend.
+
+L'index Pinecone doit être un index de documents avec un champ texte configuré en embedding intégré. L'application utilise le champ d'embedding défini par le schéma Pinecone pour indexer et rechercher les descriptions. La migration transfère les textes et métadonnées Chroma ; Pinecone recrée les embeddings avec le modèle intégré à l'index. Les vecteurs Chroma ne sont pas copiés car ils ne proviennent pas du modèle d'embedding de l'index.
+
+Pour transférer la collection locale existante vers Pinecone, ouvrez un terminal dans `backend`, activez l'environnement virtuel et lancez le script :
+
+```powershell
+cd backend
+.\venv\Scripts\Activate.ps1
+python migrate_chroma_to_pinecone.py
+```
+
+Le script copie les textes et métadonnées par lots, puis vérifie le nombre d'enregistrements transférés. Il ne supprime pas `backend/chroma_db`, qui reste disponible après la migration. Vous pouvez relancer le script : les identifiants sont stables et les documents Pinecone sont mis à jour.
+
+Si une exécution précédente a échoué avec une erreur `documents API`, mettez à jour les dépendances depuis `backend` avant de relancer la migration :
+
+```powershell
+python -m pip install -r requirements.txt
+python migrate_chroma_to_pinecone.py
+```
+
+Démarrer le serveur depuis `backend` et le même environnement virtuel :
+
+```powershell
+cd backend
+.\venv\Scripts\Activate.ps1
 uvicorn main:app --reload
 ```
 
@@ -183,18 +210,10 @@ npm run dev
 
 L'adresse du frontend dépend de l'outil utilisé pour créer le projet React.
 
-## Configuration
+Pour enrichir le catalogue, ouvrez `http://localhost:5173/admin`, saisissez la même valeur que `ADMIN_API_KEY`, puis importez un fichier CSV. Les colonnes requises sont `nom,description,prix,categorie,tailles,couleurs,stock`. Séparez plusieurs tailles ou couleurs avec `|`. L'interface propose un modèle à télécharger et affiche les erreurs par ligne. Les fichiers UTF-8 séparés par des virgules ou des points-virgules sont acceptés.
 
-Les clés API et les paramètres sensibles doivent être stockés dans un fichier `.env` local, qui ne doit pas être versionné.
+Pour ajouter des produits depuis l'interface, ouvrez `http://localhost:5173/admin`, saisissez `ADMIN_API_KEY`, puis importez votre CSV. Le fichier doit contenir les colonnes `nom,description,prix,categorie,tailles,couleurs,stock`; séparez les tailles et couleurs multiples avec `|`. Un modèle téléchargeable est disponible dans l'interface. Les fichiers UTF-8 séparés par des virgules ou points-virgules sont pris en charge. Les produits sont envoyés à Pinecone par lots de 90; un fichier peut contenir jusqu'à 2 000 lignes.
 
-Exemple de configuration :
-
-```env
-GROQ_API_KEY=
-CHROMA_PERSIST_DIRECTORY=./chroma_db
-```
-
-Les variables doivent être adaptées aux paramètres réellement utilisés par l'application.
 
 ## Perspectives d'évolution
 
@@ -212,4 +231,4 @@ L'objectif de Boutique Chatbot est de faciliter l'accès aux informations commer
 
 ---
 
-Développé avec Python, FastAPI, React et ChromaDB.
+Développé avec Python, FastAPI, React et Pinecone. La base locale `backend/chroma_db` est conservée comme source de migration.
