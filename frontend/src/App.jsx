@@ -173,7 +173,7 @@ function ChatApp() {
                 </div>
                 <div className="flex items-center gap-2">
                   <CreditCard size={18} />
-                  <span>Paiement sécurisé</span>
+                  <span>Paiement à la livraison</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className={`w-2 h-2 rounded-full ${
